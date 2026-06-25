@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测测你最像24节气中的哪个节气</title>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f3eb;
+  --card-bg: #fffef9;
+  --text: #3d3226;
+  --text-light: #8b7e6a;
+  --text-lighter: #b5a898;
+  --accent: #b5343a;
+  --accent-hover: #9a2c31;
+  --accent-light: #fdf5f5;
+  --border: #e5dcd0;
+  --border-light: #f0ebe0;
+  --shadow: 0 4px 24px rgba(60, 40, 20, 0.08);
+  --radius: 16px;
+  --radius-sm: 10px;
+  /* Growth stage colors */
+  --soil: #8b6914;
+  --soil-dark: #5c4510;
+  --stem-green: #6b9b4f;
+  --leaf-green: #7bab5b;
+  --leaf-fall: #c9984a;
+  --flower: #f0a0b0;
+  --fruit: #d4735e;
+  --snow: #e8eef4;
+}
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", sans-serif;
+  background: linear-gradient(180deg, #f5efe4 0%, #ede4d5 30%, #f0e8d8 60%, #f5efe4 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(180, 140, 100, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(140, 160, 180, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(200, 180, 150, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container { width: 100%; max-width: 500px; position: relative; z-index: 1; }
+
+/* ===== Card ===== */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px 32px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: padding 0.3s;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #cbb99a, #b5343a, #cbb99a);
+  opacity: 0.5;
+}
+
+/* ===== Screen visibility ===== */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn 0.5s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== Home Screen ===== */
+.home-header { text-align: center; margin-bottom: 8px; }
+
+/* CSS Seed */
+.seed-container {
+  width: 64px; height: 72px;
+  margin: 0 auto 12px;
+  position: relative;
+  animation: seedFloat 3s ease-in-out infinite;
+}
+
+@keyframes seedFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.seed-body {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 36px; height: 46px;
+  background: linear-gradient(135deg, #c49a3c 0%, #a07828 40%, #8b6914 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: inset 0 -4px 6px rgba(0,0,0,0.2), 0 2px 8px rgba(100, 70, 20, 0.3);
+}
+
+.seed-body::after {
+  content: '';
+  position: absolute;
+  top: 6px; left: 8px;
+  width: 10px; height: 14px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  transform: rotate(-20deg);
+}
+
+.seed-line {
+  position: absolute;
+  top: 50%; left: 10%;
+  width: 80%; height: 1px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 1px;
+}
+
+.seed-soil {
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  width: 48px; height: 8px;
+  background: var(--soil);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+/* Seed drop animation */
+@keyframes seedDrop {
+  0% { transform: translateY(0); opacity: 1; }
+  30% { transform: translateY(20px) rotate(15deg); opacity: 1; }
+  100% { transform: translateY(120px) rotate(45deg); opacity: 0; }
+}
+
+.seed-container.dropping {
+  animation: seedDrop 0.8s ease-in forwards;
+}
+
+.home-title {
+  font-family: "STKaiti", "KaiTi", "楷体", "Noto Serif SC", serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  letter-spacing: 2px;
+}
+
+.home-subtitle {
+  font-size: 15px;
+  color: var(--text-light);
+  margin: 12px 0 4px;
+  line-height: 1.6;
+}
+
+.home-version-note {
+  font-size: 12px;
+  color: #c9984a;
+  background: #fef9f0;
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 50px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.home-decoration {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 16px;
+  margin-bottom: 28px;
+  opacity: 0.6;
+}
+
+.season-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.season-dot.spring { background: #7bab7b; }
+.season-dot.summer { background: #d4735e; }
+.season-dot.autumn { background: #c9984a; }
+.season-dot.winter { background: #5f8aa8; }
+
+.home-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fefdf9;
+  text-align: left;
+}
+
+.mode-card:hover {
+  border-color: #cbb99a;
+  background: #fdf9f2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px rgba(60, 40, 20, 0.06);
+}
+
+.mode-card:active { transform: scale(0.985); }
+
+.mode-card-icon { font-size: 28px; flex-shrink: 0; width: 44px; text-align: center; }
+
+.mode-card-info { flex: 1; }
+
+.mode-card-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+
+.mode-card-desc { font-size: 12px; color: var(--text-light); }
+
+.mode-card-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.mode-card-badge.simple { background: #f0ebe0; color: #8b7e6a; }
+.mode-card-badge.detailed { background: #fdf5f5; color: #b5343a; }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 28px;
+  border: none;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(181, 52, 58, 0.3);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(181, 52, 58, 0.4);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-primary:disabled:hover { transform: none; background: var(--accent); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(181, 52, 58, 0.04);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-light);
+  border: 1px dashed var(--border);
+  font-size: 13px;
+  padding: 8px 18px;
+}
+.btn-ghost:hover { border-color: #cbb99a; color: var(--text); background: #fdf9f2; }
+.btn-ghost.active { border-style: solid; border-color: #c9984a; color: #b8860b; background: #fef9f0; }
+
+.btn-block { width: 100%; }
+
+/* ===== Quiz Screen ===== */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.quiz-mode-tag {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 50px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.quiz-progress-wrap { margin-bottom: 20px; }
+
+.quiz-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.quiz-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: #e8e0d5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #cbb99a, #b5343a);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.quiz-question-wrap { min-height: 220px; }
+
+.quiz-question { animation: slideInRight 0.35s ease; }
+
+.quiz-question-num {
+  font-size: 12px;
+  color: var(--text-lighter);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.quiz-question-text {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  color: var(--text);
+}
+
+.quiz-options { display: flex; flex-direction: column; gap: 9px; }
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fefdf9;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.quiz-option:hover { border-color: #cbb99a; background: #fdf9f2; }
+.quiz-option:active { transform: scale(0.985); }
+
+.quiz-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 3px rgba(181, 52, 58, 0.06);
+}
+.quiz-option.selected .option-indicator { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.quiz-option.multi-selected {
+  border-color: #c9984a;
+  background: #fef9f0;
+}
+.quiz-option.multi-selected .option-indicator { background: #c9984a; color: #fff; border-color: #c9984a; }
+
+.option-indicator {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  color: var(--text-lighter);
+  background: #faf7f2;
+}
+
+.option-text { flex: 1; }
+
+.quiz-multi-toggle { margin-top: 14px; text-align: center; }
+
+/* Quiz nav */
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 12px;
+}
+.quiz-nav .btn { min-width: 90px; }
+.quiz-counter { font-size: 12px; color: var(--text-lighter); white-space: nowrap; }
+
+/* ===== Growth Animation Area ===== */
+.growth-area {
+  margin-top: 18px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-light);
+}
+
+.growth-label {
+  font-size: 11px;
+  color: var(--text-lighter);
+  text-align: center;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+.growth-scene {
+  width: 100%;
+  height: 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Soil */
+.growth-soil {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 10px;
+  background: linear-gradient(180deg, #c4a86c 0%, #8b6914 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Plant container — centered on soil */
+.growth-plant {
+  position: absolute;
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 44px;
+}
+
+/* Stem */
+.growth-stem {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  background: var(--stem-green);
+  border-radius: 2px;
+  transition: height 0.5s ease;
+}
+.growth-stem.winter-stem { background: #8b7355; }
+
+/* Leaf */
+.growth-leaf {
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  background: var(--leaf-green);
+  border-radius: 0 70% 0 70%;
+  transition: all 0.5s ease;
+}
+.growth-leaf.left { border-radius: 70% 0 70% 0; }
+.growth-leaf.fall { background: #c9984a; }
+.growth-leaf.bare { opacity: 0; }
+
+/* Flower */
+.growth-flower {
+  position: absolute;
+  width: 16px; height: 16px;
+  background: var(--flower);
+  border-radius: 50%;
+  transition: all 0.5s ease;
+  box-shadow: 0 0 6px rgba(240, 160, 176, 0.5);
+}
+.growth-flower::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px; height: 6px;
+  background: #f5d34a;
+  border-radius: 50%;
+}
+
+/* Fruit */
+.growth-fruit {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: var(--fruit);
+  border-radius: 50%;
+  transition: all 0.5s ease;
+}
+
+/* Snow overlay */
+.growth-snow {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(220, 230, 240, 0.7);
+  transition: height 0.5s ease;
+  border-radius: 2px 2px 0 0;
+}
+
+/* Snow particles */
+.growth-snow-particle {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: #d0dce8;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* Seed underground (stage 0) */
+.growth-seed-underground {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px; height: 8px;
+  background: #a07828;
+  border-radius: 50%;
+  transition: all 0.5s ease;
+}
+
+/* Tiny sprout */
+.growth-sprout {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  background: #8fbc6b;
+  border-radius: 1px;
+  transition: height 0.5s ease;
+}
+
+/* Dew drop */
+.growth-dew {
+  position: absolute;
+  width: 5px; height: 5px;
+  background: rgba(180, 210, 240, 0.7);
+  border-radius: 50%;
+  transition: opacity 0.5s ease;
+}
+
+/* Stage label */
+.growth-stage-label {
+  font-size: 10px;
+  color: var(--text-lighter);
+  text-align: center;
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+
+/* ===== Result Screen ===== */
+.result-wrap { text-align: center; position: relative; z-index: 1; }
+
+.result-accuracy {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.result-season-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+/* Result illustration — CSS plant matching the solar term */
+.result-illustration {
+  width: 100px; height: 100px;
+  margin: 0 auto 8px;
+  position: relative;
+  animation: seedFloat 3s ease-in-out infinite;
+}
+
+.result-term-name {
+  font-family: "STKaiti", "KaiTi", "楷体", "Noto Serif SC", serif;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin-bottom: 2px;
+}
+
+.result-term-sub {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 18px;
+  letter-spacing: 1px;
+}
+
+.result-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 auto 18px;
+  border-radius: 1px;
+}
+
+.result-traits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.result-trait {
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.result-description {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.result-poem {
+  font-family: "STKaiti", "KaiTi", "楷体", "Noto Serif SC", serif;
+  font-size: 15px;
+  color: var(--text-light);
+  font-style: italic;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.result-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.result-share-hint { font-size: 12px; color: var(--text-lighter); margin-top: 2px; }
+
+/* Season distribution mini chart */
+.result-distribution { margin-bottom: 20px; text-align: left; }
+
+.result-distribution-title {
+  font-size: 12px;
+  color: var(--text-lighter);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.dist-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+.dist-bar-label { width: 28px; font-size: 12px; color: var(--text-light); text-align: right; flex-shrink: 0; }
+
+.dist-bar-track { flex: 1; height: 8px; background: #f0ebe0; border-radius: 4px; overflow: hidden; }
+
+.dist-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.dist-bar-fill.spring { background: #7bab7b; }
+.dist-bar-fill.summer { background: #d4735e; }
+.dist-bar-fill.autumn { background: #c9984a; }
+.dist-bar-fill.winter { background: #5f8aa8; }
+
+.dist-bar-pct { width: 32px; font-size: 11px; color: var(--text-lighter); text-align: right; flex-shrink: 0; }
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #3d3226;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  z-index: 100;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; } to { opacity: 0; }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .card { padding: 28px 18px 24px; border-radius: 12px; }
+  .home-title { font-size: 23px; }
+  .seed-container { width: 52px; height: 60px; }
+  .seed-body { width: 28px; height: 36px; }
+  .seed-soil { width: 38px; }
+  .quiz-question-text { font-size: 17px; }
+  .quiz-option { padding: 11px 13px; font-size: 13px; }
+  .result-term-name { font-size: 32px; }
+  .result-illustration { width: 80px; height: 80px; }
+  .result-description { font-size: 14px; }
+  .mode-card { padding: 14px; }
+  .mode-card-title { font-size: 15px; }
+  .btn { padding: 11px 22px; font-size: 14px; }
+  .growth-scene { height: 48px; }
+}
+
+@media (min-width: 768px) {
+  .card { padding: 48px 40px 36px; }
+  .home-title { font-size: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card" id="card">
+
+    <!-- ===== HOME SCREEN ===== -->
+    <div class="screen active" id="screen-home">
+      <div class="home-header">
+        <!-- CSS Seed -->
+        <div class="seed-container" id="home-seed">
+          <div class="seed-body">
+            <div class="seed-line"></div>
+          </div>
+          <div class="seed-soil"></div>
+        </div>
+
+        <h1 class="home-title">测测你最像<br>24节气中的哪个节气</h1>
+        <p class="home-subtitle">
+          春生夏长，秋收冬藏<br>
+          每个节气都有独特的性格密码
+        </p>
+        <p class="home-version-note">
+          <!-- ⚠️ 精简版与详细版测试结果可能存在出入 -->
+        </p>
+        <div class="home-decoration">
+          <span class="season-dot spring"></span>
+          <span class="season-dot summer"></span>
+          <span class="season-dot autumn"></span>
+          <span class="season-dot winter"></span>
+        </div>
+      </div>
+
+      <div class="home-modes">
+        <div class="mode-card" onclick="startQuiz('simple')">
+          <!-- <div class="mode-card-icon">⚡</div> -->
+          <div class="mode-card-info">
+            <div class="mode-card-title">精简版 · 10 题</div>
+            <div class="mode-card-desc">快速了解你的节气人格</div>
+          </div>
+          <span class="mode-card-badge simple">约 2 分钟</span>
+        </div>
+
+        <div class="mode-card" onclick="startQuiz('detailed')">
+          <!-- <div class="mode-card-icon">🔍</div> -->
+          <div class="mode-card-info">
+            <div class="mode-card-title">详细版 · 25 题</div>
+            <div class="mode-card-desc">更精准深入的节气分析</div>
+          </div>
+          <span class="mode-card-badge detailed">约 5 分钟</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== QUIZ SCREEN ===== -->
+    <div class="screen" id="screen-quiz">
+      <div class="quiz-header">
+        <span class="quiz-mode-tag" id="quiz-mode-tag"></span>
+        <span style="font-size:11px;color:var(--text-lighter)" id="quiz-accuracy-note"></span>
+      </div>
+      <div class="quiz-progress-wrap">
+        <div class="quiz-progress-info">
+          <span id="quiz-progress-label">第 1/10 题</span>
+        </div>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="quiz-question-wrap" id="quiz-question-wrap"></div>
+
+      <div class="quiz-multi-toggle">
+        <button class="btn btn-ghost" id="btn-multi-toggle" onclick="toggleMultiSelect()">
+          🔀 我要多选
+        </button>
+      </div>
+
+      <!-- Growth animation area -->
+      <div class="growth-area">
+        <div class="growth-label">🌱 节气生长</div>
+        <div class="growth-scene" id="growth-scene">
+          <div class="growth-soil"></div>
+          <div class="growth-plant" id="growth-plant">
+            <div class="growth-seed-underground" id="growth-seed"></div>
+            <div class="growth-sprout" id="growth-sprout"></div>
+            <div class="growth-stem" id="growth-stem"></div>
+            <div class="growth-leaf left" id="growth-leaf-l1"></div>
+            <div class="growth-leaf" id="growth-leaf-r1"></div>
+            <div class="growth-leaf left" id="growth-leaf-l2"></div>
+            <div class="growth-leaf" id="growth-leaf-r2"></div>
+            <div class="growth-flower" id="growth-flower"></div>
+            <div class="growth-fruit" id="growth-fruit"></div>
+            <div class="growth-dew" id="growth-dew"></div>
+          </div>
+          <div class="growth-snow" id="growth-snow" style="height:0"></div>
+          <div class="growth-snow-particle" id="growth-snow-p1"></div>
+          <div class="growth-snow-particle" id="growth-snow-p2"></div>
+          <div class="growth-snow-particle" id="growth-snow-p3"></div>
+        </div>
+        <div class="growth-stage-label" id="growth-stage-label"></div>
+      </div>
+
+      <div class="quiz-nav">
+        <button class="btn btn-outline" id="btn-prev" onclick="prevQuestion()" style="visibility: hidden;">
+          ← 上一题
+        </button>
+        <span class="quiz-counter" id="quiz-counter"></span>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" disabled>
+          下一题 →
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== RESULT SCREEN ===== -->
+    <div class="screen" id="screen-result">
+      <div class="result-wrap" id="result-wrap">
+        <div class="result-accuracy" id="result-accuracy"></div>
+        <div class="result-season-badge" id="result-badge"></div>
+        <!-- CSS illustration matching the solar term -->
+        <div class="result-illustration" id="result-illustration"></div>
+        <div class="result-term-name" id="result-name"></div>
+        <div class="result-term-sub" id="result-sub"></div>
+        <div class="result-divider"></div>
+        <div class="result-traits" id="result-traits"></div>
+        <p class="result-description" id="result-desc"></p>
+        <p class="result-poem" id="result-poem"></p>
+
+        <div class="result-distribution" id="result-distribution"></div>
+
+        <div class="result-actions">
+          <button class="btn btn-primary btn-block" onclick="shareResult()">
+            📤 分享给朋友
+          </button>
+          <button class="btn btn-outline btn-block" onclick="retakeQuiz()">
+            🔄 再测一次
+          </button>
+          <p class="result-share-hint">也让朋友来测测看吧～</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== SHUFFLE UTILITY =====
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ===== ALL 25 QUESTIONS =====
+const allQuestions = [
+  {
+    text: '遇到一个完全陌生的社交场合，你的第一反应更接近？',
+    options: [
+      { text: '主动寻找话题，结识新朋友', season: 'summer' },
+      { text: '先观察环境和人群，再决定怎么做', season: 'autumn' },
+      { text: '找安静的角落，和少数几个人深聊', season: 'winter' },
+      { text: '保持开放，随缘遇到谁就和谁聊', season: 'spring' }
+    ]
+  },
+  {
+    simple: true,
+    text: '工作中遇到一个棘手难题，你更倾向于？',
+    options: [
+      { text: '立即召集团队头脑风暴，快速出方案', season: 'summer' },
+      { text: '先自己深入研究，想透彻了再行动', season: 'autumn' },
+      { text: '稳扎稳打，按步骤一步步解决', season: 'winter' },
+      { text: '换个角度思考，找创新的突破口', season: 'spring' }
+    ]
+  },
+  {
+    text: '手机相册里占比最多的照片是？',
+    options: [
+      { text: '朋友聚会、热闹的活动场景', season: 'summer' },
+      { text: '风景、光影、有质感的瞬间', season: 'autumn' },
+      { text: '工作资料截图、有用的信息', season: 'winter' },
+      { text: '日常碎片、随手拍的可爱事物', season: 'spring' }
+    ]
+  },
+  {
+    simple: true,
+    text: '压力很大的时候，对你最有效的解压方式是？',
+    options: [
+      { text: '运动出汗，用身体的累换精神的放松', season: 'summer' },
+      { text: '一个人安静地看书、听音乐或冥想', season: 'autumn' },
+      { text: '整理房间或完成待办清单，恢复掌控感', season: 'winter' },
+      { text: '约好友倾诉一番，或出去走走换换心情', season: 'spring' }
+    ]
+  },
+  {
+    text: '如果可以选择，你更愿意把时间投入到？',
+    options: [
+      { text: '尝试新鲜事物，不断拓展生活边界', season: 'spring' },
+      { text: '和重要的人在一起，创造共同回忆', season: 'summer' },
+      { text: '深耕一个领域，打磨自己的专业技能', season: 'autumn' },
+      { text: '规划和储蓄，为长远的未来做准备', season: 'winter' }
+    ]
+  },
+  {
+    simple: true,
+    text: '关于"后悔"，以下哪种说法最接近你的想法？',
+    options: [
+      { text: '后悔做过什么，也比后悔没做要好', season: 'summer' },
+      { text: '每一次后悔都是一次成长的契机', season: 'spring' },
+      { text: '与其后悔过去，不如想想以后怎么避免', season: 'winter' },
+      { text: '人生没有白走的路，所有经历都有意义', season: 'autumn' }
+    ]
+  },
+  {
+    text: '在团队合作中，你更倾向于承担什么角色？',
+    options: [
+      { text: '提出新想法、打破常规的那个人', season: 'spring' },
+      { text: '推动执行、确保事情落地的实干者', season: 'summer' },
+      { text: '分析风险、把控质量的标准制定者', season: 'winter' },
+      { text: '协调关系、维护团队氛围的润滑剂', season: 'autumn' }
+    ]
+  },
+  {
+    text: '如果可以回到过去，你最想做的是？',
+    options: [
+      { text: '对某个重要的人说一句当时没说出口的话', season: 'autumn' },
+      { text: '在某个关键时刻做出不同的选择', season: 'winter' },
+      { text: '重新体验一段已经逝去的美好时光', season: 'spring' },
+      { text: '修正一个让你至今耿耿于怀的错误', season: 'summer' }
+    ]
+  },
+  {
+    text: '你对"成功"的定义更接近？',
+    options: [
+      { text: '活成自己想要的样子，不被外界定义', season: 'autumn' },
+      { text: '在自己热爱的领域做到顶尖水平', season: 'summer' },
+      { text: '拥有稳定幸福的生活和亲密的关系', season: 'spring' },
+      { text: '对社会或他人产生了实实在在的积极影响', season: 'winter' }
+    ]
+  },
+  {
+    simple: true,
+    text: '当好友和你的意见产生严重分歧时，你通常会？',
+    options: [
+      { text: '坚持自己的观点，用事实和逻辑说服对方', season: 'summer' },
+      { text: '先理解对方立场，寻找双方都接受的方案', season: 'spring' },
+      { text: '冷静分析分歧根源，再决定是否继续讨论', season: 'autumn' },
+      { text: '敏感话题先搁置，关系比争对错更重要', season: 'winter' }
+    ]
+  },
+  {
+    text: '你对未来的态度更接近？',
+    options: [
+      { text: '充满期待，相信明天会比今天更好', season: 'spring' },
+      { text: '制定清晰的目标和计划，一步步实现', season: 'winter' },
+      { text: '专注当下，把眼前的事做好未来自然来', season: 'autumn' },
+      { text: '保持灵活，随时准备抓住出现的机遇', season: 'summer' }
+    ]
+  },
+  {
+    simple: true,
+    text: '以下哪种情况最容易让你感到焦虑？',
+    options: [
+      { text: '生活一成不变，日复一日没有新鲜感', season: 'spring' },
+      { text: '付出了大量努力但迟迟看不到成果', season: 'summer' },
+      { text: '事情的发展偏离了计划，失去了控制', season: 'winter' },
+      { text: '人际关系中的误解、矛盾与疏远', season: 'autumn' }
+    ]
+  },
+  {
+    text: '学习一项新技能时，你的方式更接近？',
+    options: [
+      { text: '找系统地教程和资料，按部就班地学', season: 'winter' },
+      { text: '直接上手实践，在做中学、在错中悟', season: 'summer' },
+      { text: '找有经验的人请教，边交流边学习', season: 'spring' },
+      { text: '先理解背后的底层原理，再动手操作', season: 'autumn' }
+    ]
+  },
+  {
+    text: '你理想中的周末早晨是？',
+    options: [
+      { text: '睡到自然醒，然后悠闲地做一顿早午餐', season: 'autumn' },
+      { text: '早起运动或者按计划开启充实的一天', season: 'summer' },
+      { text: '没有计划，随心所欲，想做什么做什么', season: 'spring' },
+      { text: '安静地享受独处，泡茶看书听播客', season: 'winter' }
+    ]
+  },
+  {
+    simple: true,
+    text: '对于"规则"，你的态度更接近？',
+    options: [
+      { text: '规则是秩序的基石，应当被尊重和遵守', season: 'winter' },
+      { text: '规则是参考框架，但不该被规则束缚手脚', season: 'spring' },
+      { text: '理解规则背后的逻辑，好的遵守，不好的改进', season: 'autumn' },
+      { text: '有时候打破规则，才能创造出更大的价值', season: 'summer' }
+    ]
+  },
+  {
+    text: '如果你获得了一笔可观的意外收入，你会？',
+    options: [
+      { text: '投资自己，报课或学习一项新技能', season: 'autumn' },
+      { text: '存起来或做理财规划，以备不时之需', season: 'winter' },
+      { text: '请家人朋友吃顿好的，分享这份幸运', season: 'summer' },
+      { text: '去一个一直想去但没去的地方旅行', season: 'spring' }
+    ]
+  },
+  {
+    text: '在工作和学习中，什么最能激励你？',
+    options: [
+      { text: '完成目标的成就感和对局面的掌控感', season: 'winter' },
+      { text: '获得他人的认可、赞赏和正向反馈', season: 'summer' },
+      { text: '感受到自己每一天都在进步和成长', season: 'spring' },
+      { text: '做有意义的事，看到自己的努力产生了实际影响', season: 'autumn' }
+    ]
+  },
+  {
+    simple: true,
+    text: '以下哪种描述最接近你处理情绪的方式？',
+    options: [
+      { text: '情绪来得快去得也快，不怎么会憋在心里', season: 'summer' },
+      { text: '习惯一个人慢慢消化，不太向外表达', season: 'winter' },
+      { text: '通过写作、运动或创作把情绪转化掉', season: 'autumn' },
+      { text: '愿意和信任的人分享，说出来会好很多', season: 'spring' }
+    ]
+  },
+  {
+    text: '你认为一段关系中最重要的品质是？',
+    options: [
+      { text: '真诚和信任，没有这两样一切都无从谈起', season: 'spring' },
+      { text: '相互支持和陪伴，在对方需要时一直在', season: 'summer' },
+      { text: '理解并尊重彼此的边界和独立性', season: 'winter' },
+      { text: '能够一起成长、彼此启发，成为更好的人', season: 'autumn' }
+    ]
+  },
+  {
+    text: '面对一个完全陌生的领域，你通常会？',
+    options: [
+      { text: '广泛涉猎，快速建立对这个领域的整体认知', season: 'spring' },
+      { text: '找到最让你兴奋的点，一头扎进去深入探索', season: 'summer' },
+      { text: '系统学习，搭建完整的知识框架和体系', season: 'winter' },
+      { text: '先搞懂这个领域的底层思维方式和运作逻辑', season: 'autumn' }
+    ]
+  },
+  {
+    simple: true,
+    text: '你更欣赏哪种类型的人？',
+    options: [
+      { text: '温和包容、让人如沐春风的人', season: 'spring' },
+      { text: '目标明确、行动力强、说到做到的人', season: 'summer' },
+      { text: '思想深刻、有独立见解、不随大流的人', season: 'autumn' },
+      { text: '稳重可靠、值得信赖、始终如一的人', season: 'winter' }
+    ]
+  },
+  {
+    simple: true,
+    text: '用一个词形容你的人生态度，最接近的是？',
+    options: [
+      { text: '探索 —— 不断发现新的可能性', season: 'spring' },
+      { text: '热爱 —— 全身心投入每一段经历', season: 'summer' },
+      { text: '沉淀 —— 在时间里积累厚度与深度', season: 'autumn' },
+      { text: '坚守 —— 守住自己相信的东西', season: 'winter' }
+    ]
+  },
+  {
+    text: '当精心安排的计划被打乱时，你的反应通常是？',
+    options: [
+      { text: '有点烦但很快调整，顺势而为', season: 'spring' },
+      { text: '立刻想办法补救，快速找替代方案', season: 'summer' },
+      { text: '先停下来重新评估，确认新的最优路径', season: 'autumn' },
+      { text: '虽然不舒服但保持冷静，按优先级重排', season: 'winter' }
+    ]
+  },
+  {
+    text: '你觉得自己当前最需要提升的是？',
+    options: [
+      { text: '行动力 —— 有时候想太多而做得太少', season: 'autumn' },
+      { text: '耐心 —— 有时候太急于看到结果', season: 'summer' },
+      { text: '决断力 —— 有时候选择太多反而犹豫', season: 'winter' },
+      { text: '专注力 —— 有时候太容易被新鲜事物吸引', season: 'spring' }
+    ]
+  },
+  {
+    simple: true,
+    text: '如果用一个画面来描绘你的内心世界，它更像是？',
+    options: [
+      { text: '清晨阳光穿过树叶，洒在刚冒芽的草地上', season: 'spring' },
+      { text: '正午大海边，阳光灿烂、波涛充满力量地涌动', season: 'summer' },
+      { text: '黄昏时分，一望无际的金色麦田和远山', season: 'autumn' },
+      { text: '深夜雪原上，一座亮着暖橘色灯光的小木屋', season: 'winter' }
+    ]
+  }
+];
+
+// ===== 24 SOLAR TERMS DATA =====
+const solarTerms = {
+  spring: [
+    { name:'立春', sub:'Start of Spring', emoji:'🌱',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['开拓者','充满希望','生机勃勃'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像立春一样，是万物复苏的先行者。虽然寒冬还未完全退去，但你总能第一个感受到温暖的气息。你天生乐观，充满希望与勇气，无论环境多么艰难，你都能在别人看不到希望的地方发现生机。你是人群中的"报春者"，总能在最合适的时机带来新的开始。',
+      poem:'"东风带雨逐西风，大地阳和暖气生。"', color:'#5b8c5a' },
+    { name:'雨水', sub:'Rain Water', emoji:'💧',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['温柔细腻','善解人意','润物无声'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像雨水一样温柔细腻，善解人意。"润物细无声"是你最真实的写照——你不张扬，不喧哗，却总能在别人最需要的时候给予恰到好处的关怀。你的存在就像春雨，不知不觉中让周围的一切变得更好。你懂得用柔软的方式化解矛盾，是朋友圈中最温暖的倾听者。',
+      poem:'"好雨知时节，当春乃发生。随风潜入夜，润物细无声。"', color:'#5b8c5a' },
+    { name:'惊蛰', sub:'Awakening of Insects', emoji:'⚡',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['隐藏实力','一鸣惊人','潜力无限'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像惊蛰时节的春雷，平时看似低调内敛，实则蕴藏着惊人的能量。你不喜欢过早暴露自己的实力，而是选择在暗中积蓄力量。时机一到，你便会如春雷般一鸣惊人，让所有人刮目相看。你相信"不鸣则已，一鸣惊人"，是真正的隐藏实力派。',
+      poem:'"微雨众卉新，一雷惊蛰始。"', color:'#5b8c5a' },
+    { name:'春分', sub:'Spring Equinox', emoji:'⚖️',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['平衡和谐','理性温和','公正不偏'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像春分一样追求平衡与和谐。昼夜均分、寒暑平衡是你的处世哲学——你不走极端，不偏不倚，总能在复杂的情况中找到最佳平衡点。在朋友中你是天然的调解者，你的理性与温和让人信服，你的公正让每个人都感到被尊重。',
+      poem:'"春分雨脚落声微，柳岸斜风带客归。"', color:'#5b8c5a' },
+    { name:'清明', sub:'Clear and Bright', emoji:'🌸',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['清澈通透','内心明净','自有主张'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像清明时节的天空一样清澈明净。你不随波逐流，内心有自己的判断和坚持。你的通透不是简单，而是经历世事之后依然保持本真。朋友都说和你在一起很舒服，因为你不藏心机，待人真诚。你看世界的眼光清澈，所以世界在你眼中也格外美好。',
+      poem:'"清明时节雨纷纷，路上行人欲断魂。"', color:'#5b8c5a' },
+    { name:'谷雨', sub:'Grain Rain', emoji:'🌾',
+      badge:'🌸 春季节气', badgeBg:'#e8f0e3', badgeColor:'#5b8c5a',
+      traits:['默默付出','成就他人','厚德载物'], traitBg:'#e8f0e3', traitColor:'#5b8c5a',
+      desc:'你像谷雨一样，是那种默默滋养他人的人。"雨生百谷"——你的付出也许不引人注目，但却实实在在地成就了身边的人。你乐于看到别人因为你的帮助而成长，这种无私让你成为团队中最受信赖的支柱。你不求回报，但你的善良终将被世界温柔以待。',
+      poem:'"谷雨如丝复似尘，煮瓶浮蜡正尝新。"', color:'#5b8c5a' }
+  ],
+  summer: [
+    { name:'立夏', sub:'Start of Summer', emoji:'☀️',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['热情开朗','阳光活力','感染力强'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像立夏一样热情开朗，是人群中的小太阳。你走到哪里，哪里就充满了欢声笑语。你的热情不是一时冲动，而是源自对生活的热爱。你相信每一天都值得被好好对待，你的正能量能感染身边的每一个人。和你在一起，人们会不自觉地感到温暖和快乐。',
+      poem:'"绿树阴浓夏日长，楼台倒影入池塘。"', color:'#c44d34' },
+    { name:'小满', sub:'Grain Buds', emoji:'🌿',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['知足常乐','恰到好处','人生智者'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像小满一样懂得"满招损，谦受益"的人生智慧。你不追求极致的完美，而是懂得留有余地。"小满即可"是你的生活哲学——你知道什么时候该停下，什么时候该满足。这种知足不是不上进，而是一种更高层次的智慧，让你在纷扰的世界中保持内心的宁静与从容。',
+      poem:'"小满温和夏意浓，麦仁饱满粒初成。"', color:'#c44d34' },
+    { name:'芒种', sub:'Grain in Ear', emoji:'🌾',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['勤奋耕耘','踏实可靠','天道酬勤'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像芒种一样勤奋务实，相信一分耕耘一分收获。你不会心存侥幸，而是脚踏实地地做好每一件事。你的可靠和勤勉让你成为团队中最值得信赖的人。你知道成功没有捷径，所以愿意比别人多付出十倍的努力。天道酬勤，你的每一滴汗水终将开花结果。',
+      poem:'"时雨及芒种，四野皆插秧。"', color:'#c44d34' },
+    { name:'夏至', sub:'Summer Solstice', emoji:'🔥',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['极致绚烂','全力以赴','懂得进退'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像夏至一样极致而绚烂——一年中最长的白昼，最饱满的生命力。你做事全力以赴，从不半途而废，活出了生命的最大精彩。但你同时也懂得"阳极阴生"的道理，知道极致的绽放之后需要适时的收敛。这种收放自如的智慧，让你的人生既有高潮也有深度。',
+      poem:'"昼晷已云极，宵漏自此长。"', color:'#c44d34' },
+    { name:'小暑', sub:'Minor Heat', emoji:'✨',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['活力四射','精力充沛','多姿多彩'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像小暑一样活力四射，仿佛永远有使不完的精力。你热爱生活，总是在尝试新鲜事物，你的人生丰富多彩，让人羡慕不已。你的好奇心驱使你不断探索未知的领域，你的热情让你的每一天都过得充实而有趣。朋友都说，有你在的地方就不会无聊。',
+      poem:'"小暑不足畏，深居如退藏。"', color:'#c44d34' },
+    { name:'大暑', sub:'Major Heat', emoji:'🌋',
+      badge:'🔥 夏季节气', badgeBg:'#fde8e5', badgeColor:'#c44d34',
+      traits:['炽烈真诚','爱憎分明','坦荡直接'], traitBg:'#fde8e5', traitColor:'#c44d34',
+      desc:'你像大暑一样炽烈真诚，从不拐弯抹角。你喜欢就是喜欢，不喜欢就是不喜欢，你的坦荡让人感到安心。在这个充满伪装的世界里，你的真实是一道耀眼的光。也许有人觉得你太过直接，但真正懂你的人知道，真诚是最高级的情商。',
+      poem:'"大暑运金气，荆扬不知秋。"', color:'#c44d34' }
+  ],
+  autumn: [
+    { name:'立秋', sub:'Start of Autumn', emoji:'🍂',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['成熟稳重','洞察敏锐','一叶知秋'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像立秋一样成熟稳重，拥有"一叶知秋"的敏锐洞察力。你能从小细节中看到大趋势，在别人还未察觉时就已做好准备。你的成熟不是老气横秋，而是一种经历过后的从容。你是团队中的先知先觉者，总能在关键时刻给出最有远见的建议。',
+      poem:'"一叶梧桐一报秋，稻花田里话丰收。"', color:'#b8860b' },
+    { name:'处暑', sub:'End of Heat', emoji:'🌅',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['收放自如','情绪管理','从容淡定'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像处暑一样，懂得"暑气至此而止"的收放哲学。你知道什么时候该进，什么时候该退；什么时候该热烈，什么时候该沉淀。你是情绪管理的高手，不会让一时冲动毁掉长久经营。这种从容淡定让你在任何情况下都能保持优雅，令人钦佩。',
+      poem:'"处暑无三日，新凉直万金。"', color:'#b8860b' },
+    { name:'白露', sub:'White Dew', emoji:'💎',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['纯净清雅','气质出众','不染尘埃'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像白露一样纯净清雅，有一种独特的气质让人过目难忘。"露凝而白"——你的纯净不是天真，而是一种阅尽千帆后依然选择保持本真的高贵。你不与世俗同流，有自己的精神世界和审美追求。人们被你吸引，却又不敢轻易亵渎你的那份纯净。',
+      poem:'"白露团甘子，清晨散马蹄。"', color:'#b8860b' },
+    { name:'秋分', sub:'Autumn Equinox', emoji:'⚖️',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['公正客观','实事求是','令人信服'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像秋分一样公正客观，凡事讲究实事求是。你不被感情左右判断，不因亲疏影响决定，是天生的裁判者。在你的世界里，黑白分明、是非清晰。你的公正让人信服，你的客观让人尊重。朋友遇到难以抉择的事情时，第一个想到的就是找你。',
+      poem:'"秋分客尚在，竹露夕微微。"', color:'#b8860b' },
+    { name:'寒露', sub:'Cold Dew', emoji:'🌙',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['深沉睿智','思想深邃','追求本质'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像寒露一样深沉睿智。你不满足于事物的表面，总是在追寻更深层的意义和本质。你的思想有深度，你的谈吐有分量，你善于思考那些别人未曾触及的问题。在浮躁的世界中，你是一股清流——安静而深刻，如同寒露时节的露水，晶莹而凝重。',
+      poem:'"寒露惊秋晚，朝看菊渐黄。"', color:'#b8860b' },
+    { name:'霜降', sub:"Frost's Descent", emoji:'💪',
+      badge:'🍁 秋季节气', badgeBg:'#faf0e0', badgeColor:'#b8860b',
+      traits:['坚韧不拔','愈挫愈勇','傲霜而立'], traitBg:'#faf0e0', traitColor:'#b8860b',
+      desc:'你像霜降时节的傲菊，越是寒冷越是绽放。困难不会打倒你，反而会激发你更强的斗志。你的坚韧不是固执，而是一种"千磨万击还坚劲"的生命力。你经历过风霜，却从未被风霜打败。相反，每一次考验都让你变得更加强大，如霜中菊花，愈冷愈艳。',
+      poem:'"霜降碧天静，秋事促西风。"', color:'#b8860b' }
+  ],
+  winter: [
+    { name:'立冬', sub:'Start of Winter', emoji:'🏔️',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['沉稳内敛','胸有丘壑','蓄势待发'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像立冬一样沉稳内敛。"冬，终也，万物收藏也"——你不急于表现自己，但内心自有丘壑。你知道真正的力量不需要时时展示，而是要等到最合适的时机。你像冬天的种子，表面安静地埋在土里，实则蕴藏着无限的生机与可能，只待春天的到来。',
+      poem:'"北风潜入悄无声，未品浓秋已立冬。"', color:'#4a708b' },
+    { name:'小雪', sub:'Minor Snow', emoji:'❄️',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['灵动自由','独一无二','自有节奏'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像小雪一样灵动自由，不拘一格。每一片雪花都是独一无二的，正如你的灵魂不可复制。你不随大流，有自己的节奏和方式。也许在别人眼中你有些特立独行，但正是这份独特让你如此迷人。你轻盈地飘落在这个世界上，用自己的方式绽放美丽。',
+      poem:'"小雪晴沙不作泥，疏帘红日弄朝晖。"', color:'#4a708b' },
+    { name:'大雪', sub:'Major Snow', emoji:'🌨️',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['格局宏大','心胸开阔','大气磅礴'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像大雪一样格局宏大，心胸开阔。"大雪纷飞，天地苍茫"——你不拘小节，有大局观，是能做大事的人。你的胸怀如漫天飞雪般广阔，不纠结于一时的得失。你的人生视野超越了眼前的苟且，望向更远的诗和远方。这种大气让你在任何领域都能脱颖而出。',
+      poem:'"大雪江南见未曾，今年方始是严凝。"', color:'#4a708b' },
+    { name:'冬至', sub:'Winter Solstice', emoji:'🌑',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['深邃智慧','外冷内热','回味无穷'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像冬至一样深邃而有智慧——这是一年中最长的黑夜，却也蕴含着"阴极阳生"的转机。你表面冷静甚至有些疏离，但内心却有一团温暖的火焰。你是那种越了解越觉得有魅力的人，就像冬至之后，光明一天天增长，你的深度也一层层被揭开。',
+      poem:'"天时人事日相催，冬至阳生春又来。"', color:'#4a708b' },
+    { name:'小寒', sub:'Minor Cold', emoji:'🧊',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['冷静理性','临危不乱','定海神针'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像小寒一样冷静理性，在混乱中永远能保持清醒的头脑。你的冷静不是冷漠，而是一种强大的定力。当周围的人都慌了手脚时，你就是那根定海神针。你的理性让你能在复杂的情况下做出最优判断，你的沉着让你成为危机中最可靠的那个人。',
+      poem:'"小寒连大吕，欢鹊垒新巢。"', color:'#4a708b' },
+    { name:'大寒', sub:'Major Cold', emoji:'🪨',
+      badge:'❄️ 冬季节气', badgeBg:'#e8eef4', badgeColor:'#4a708b',
+      traits:['刚毅坚强','百折不挠','松柏之志'], traitBg:'#e8eef4', traitColor:'#4a708b',
+      desc:'你像大寒一样刚毅坚强，没有什么能够真正打倒你。"岁寒，然后知松柏之后凋也"——你是那种在逆境中愈发挺拔的人。你的坚强不是冷硬，而是一种温柔而不可摧毁的力量。你知道寒冬终将过去，但在寒冬中你会站得最直。你是别人在最困难时刻最想依靠的人。',
+      poem:'"大寒宜近火，无事莫开门。"', color:'#4a708b' }
+  ]
+};
+
+// ===== STATE =====
+let currentQuestion = 0;
+let answers = [];
+let selectedOptions = new Set();
+let isMultiSelect = false;
+let quizMode = null;
+let questionSet = [];
+let shuffledOptions = [];
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+// ===== START QUIZ =====
+function startQuiz(mode) {
+  quizMode = mode;
+  currentQuestion = 0;
+  answers = [];
+  selectedOptions = new Set();
+  isMultiSelect = false;
+
+  if (mode === 'simple') {
+    questionSet = allQuestions.filter(q => q.simple);
+  } else {
+    questionSet = [...allQuestions];
+  }
+
+  // Update mode tag
+  const tag = document.getElementById('quiz-mode-tag');
+  if (mode === 'simple') {
+    tag.textContent = '⚡ 精简版';
+    tag.style.background = '#f0ebe0';
+    tag.style.color = '#8b7e6a';
+    document.getElementById('quiz-accuracy-note').textContent = '结果仅供参考';
+  } else {
+    tag.textContent = '🔍 详细版';
+    tag.style.background = '#fdf5f5';
+    tag.style.color = '#b5343a';
+    document.getElementById('quiz-accuracy-note').textContent = '';
+  }
+
+  // Reset multi-select toggle
+  document.getElementById('btn-multi-toggle').classList.remove('active');
+  document.getElementById('btn-multi-toggle').textContent = '🔀 我要多选';
+
+  // Seed drop animation on home screen
+  const seed = document.getElementById('home-seed');
+  seed.classList.add('dropping');
+  setTimeout(() => {
+    seed.classList.remove('dropping');
+    showScreen('quiz');
+    renderQuestion();
+    updateGrowthStage(0);
+  }, 500);
+}
+
+// ===== GROWTH STAGE ANIMATION =====
+// 24 stages: 0=seed underground ... 23=deep winter
+function updateGrowthStage(questionIndex) {
+  const total = questionSet.length;
+  // Map question progress (0..total-1) to growth stage (0..23)
+  const stage = total > 1 ? Math.round((questionIndex / (total - 1)) * 23) : 0;
+
+  // Show stage label (节气 name)
+  const allTerms = [
+    ...solarTerms.spring, ...solarTerms.summer,
+    ...solarTerms.autumn, ...solarTerms.winter
+  ];
+  document.getElementById('growth-stage-label').textContent = allTerms[stage].name;
+
+  // Plant elements
+  const stem = document.getElementById('growth-stem');
+  const sprout = document.getElementById('growth-sprout');
+  const seedEl = document.getElementById('growth-seed');
+  const flower = document.getElementById('growth-flower');
+  const fruit = document.getElementById('growth-fruit');
+  const dew = document.getElementById('growth-dew');
+  const snow = document.getElementById('growth-snow');
+  const leaves = [
+    document.getElementById('growth-leaf-l1'),
+    document.getElementById('growth-leaf-r1'),
+    document.getElementById('growth-leaf-l2'),
+    document.getElementById('growth-leaf-r2')
+  ];
+  const snowP = [
+    document.getElementById('growth-snow-p1'),
+    document.getElementById('growth-snow-p2'),
+    document.getElementById('growth-snow-p3')
+  ];
+
+  const stageMap = stage; // 0-23
+
+  // ── Stage 0-5: Spring (seed → sprout → seedling) ──
+  if (stageMap <= 5) {
+    // Stem grows 0→40%
+    const stemH = (stageMap / 5) * 40;
+    stem.style.height = stemH + '%';
+    stem.style.background = '#6b9b4f';
+    stem.classList.remove('winter-stem');
+    sprout.style.height = stageMap <= 1 ? (stageMap * 4 + 'px') : '0px';
+    sprout.style.opacity = stageMap <= 1 ? 1 : 0;
+    seedEl.style.opacity = stageMap <= 1 ? 1 : 0;
+    seedEl.style.width = stageMap === 0 ? '12px' : '8px';
+    flower.style.opacity = '0';
+    fruit.style.opacity = '0';
+    dew.style.opacity = stageMap === 1 ? 1 : 0;
+    snow.style.height = '0';
+    snowP.forEach(p => p.style.opacity = '0');
+    // Leaves appear at stages 3-5
+    leaves.forEach((l, i) => {
+      l.style.opacity = stageMap >= 3 + i ? '1' : '0';
+      l.classList.remove('fall', 'bare');
+    });
+    updateLeafPositions(stageMap <= 5 ? stageMap / 5 : 1);
+  }
+  // ── Stage 6-11: Summer (growing → blooming → fruiting) ──
+  else if (stageMap <= 11) {
+    const prog = (stageMap - 6) / 5; // 0→1 within summer
+    const stemH = 40 + prog * 55;
+    stem.style.height = stemH + '%';
+    stem.style.background = '#6b9b4f';
+    stem.classList.remove('winter-stem');
+    sprout.style.opacity = '0';
+    seedEl.style.opacity = '0';
+    snow.style.height = '0';
+    snowP.forEach(p => p.style.opacity = '0');
+    dew.style.opacity = stageMap === 6 ? 0.6 : 0;
+    // All leaves visible
+    leaves.forEach(l => { l.style.opacity = '1'; l.classList.remove('fall', 'bare'); });
+    updateLeafPositions(1);
+    // Flower: buds at 8-9, bloom at 10, fade at 11
+    if (stageMap <= 7) { flower.style.opacity = '0'; flower.style.transform = 'scale(0.5)'; }
+    else if (stageMap <= 9) { flower.style.opacity = '0.6'; flower.style.transform = 'scale(0.8)'; }
+    else if (stageMap === 10) { flower.style.opacity = '1'; flower.style.transform = 'scale(1)'; }
+    else { flower.style.opacity = '0.4'; flower.style.transform = 'scale(1.1)'; }
+    // Fruit: appears at 11
+    fruit.style.opacity = stageMap >= 11 ? '1' : '0';
+    if (stageMap >= 11) { fruit.style.transform = 'scale(0.7)'; }
+  }
+  // ── Stage 12-17: Autumn (ripening → yellowing → falling) ──
+  else if (stageMap <= 17) {
+    const prog = (stageMap - 12) / 5; // 0→1 within autumn
+    stem.style.height = '95%';
+    stem.style.background = prog > 0.6 ? '#8b7355' : '#6b9b4f';
+    stem.classList.toggle('winter-stem', prog > 0.6);
+    sprout.style.opacity = '0';
+    seedEl.style.opacity = '0';
+    flower.style.opacity = '0';
+    snow.style.height = '0';
+    snowP.forEach(p => p.style.opacity = '0');
+    dew.style.opacity = stageMap === 14 ? 1 : 0; // 白露 dew
+    // Fruit ripens and drops
+    fruit.style.opacity = stageMap <= 16 ? '1' : '0.3';
+    fruit.style.transform = stageMap <= 15 ? 'scale(1)' : stageMap === 16 ? 'scale(1.2)' : 'scale(0.6)';
+    // Leaves turn yellow and fall
+    const fallStart = 13; // 立秋开始变黄
+    leaves.forEach((l, i) => {
+      if (stageMap < fallStart) {
+        l.style.opacity = '1'; l.classList.remove('fall', 'bare');
+      } else if (stageMap < fallStart + 2) {
+        l.style.opacity = '1'; l.classList.add('fall'); l.classList.remove('bare');
+      } else if (stageMap < fallStart + 4) {
+        l.style.opacity = i < 2 ? '0.5' : '1'; l.classList.add('fall'); l.classList.remove('bare');
+      } else {
+        l.style.opacity = i < 3 ? '0' : '0.4'; l.classList.add('fall');
+        if (i < 3) l.classList.add('bare');
+      }
+    });
+  }
+  // ── Stage 18-23: Winter (bare → frost → snow → ice → cycle) ──
+  else {
+    const prog = (stageMap - 18) / 5; // 0→1 within winter
+    stem.style.height = '90%';
+    stem.style.background = '#8b7355';
+    stem.classList.add('winter-stem');
+    sprout.style.opacity = '0';
+    seedEl.style.opacity = stageMap === 23 ? 0.8 : 0; // 大寒: seed visible underground for next cycle
+    seedEl.style.width = '8px';
+    flower.style.opacity = '0';
+    fruit.style.opacity = '0';
+    dew.style.opacity = '0';
+    // Bare branches
+    leaves.forEach((l, i) => {
+      l.style.opacity = '0'; l.classList.add('bare');
+    });
+    // Snow accumulation
+    const snowH = Math.min(prog * 50, 40);
+    snow.style.height = snowH + '%';
+    // Snow particles
+    snowP.forEach((p, i) => {
+      p.style.opacity = prog > i * 0.15 ? Math.min((prog - i * 0.15) * 2, 0.8) : 0;
+      p.style.left = (30 + i * 20 + Math.sin(stageMap + i) * 15) + '%';
+      p.style.top = (10 + i * 25) + '%';
+    });
+  }
+}
+
+function updateLeafPositions(scale) {
+  // Position leaves along stem based on growth scale (0-1)
+  const leaves = [
+    document.getElementById('growth-leaf-l1'),
+    document.getElementById('growth-leaf-r1'),
+    document.getElementById('growth-leaf-l2'),
+    document.getElementById('growth-leaf-r2')
+  ];
+  const positions = [
+    { bottom: 25 + scale * 20 + '%', left: 20 + '%' },
+    { bottom: 35 + scale * 18 + '%', right: 20 + '%' },
+    { bottom: 48 + scale * 15 + '%', left: 22 + '%' },
+    { bottom: 58 + scale * 12 + '%', right: 22 + '%' }
+  ];
+  leaves.forEach((l, i) => {
+    l.style.bottom = positions[i].bottom;
+    if (positions[i].left) l.style.left = positions[i].left;
+    if (positions[i].right) l.style.right = positions[i].right;
+  });
+}
+
+// ===== RENDER QUESTION =====
+function renderQuestion() {
+  const q = questionSet[currentQuestion];
+  selectedOptions = new Set();
+  isMultiSelect = false;
+
+  document.getElementById('btn-multi-toggle').classList.remove('active');
+  document.getElementById('btn-multi-toggle').textContent = '🔀 我要多选';
+
+  const indexed = q.options.map((opt, i) => ({ ...opt, origIndex: i }));
+  shuffledOptions = shuffle(indexed);
+
+  const total = questionSet.length;
+  document.getElementById('quiz-progress-label').textContent =
+    `第 ${currentQuestion + 1}/${total} 题`;
+  document.getElementById('quiz-progress-fill').style.width =
+    `${(currentQuestion / total) * 100}%`;
+
+  const wrap = document.getElementById('quiz-question-wrap');
+  const labels = ['A', 'B', 'C', 'D'];
+
+  wrap.innerHTML = `
+    <div class="quiz-question">
+      <div class="quiz-question-num">QUESTION ${currentQuestion + 1}</div>
+      <div class="quiz-question-text">${q.text}</div>
+      <div class="quiz-options">
+        ${shuffledOptions.map((opt, i) => `
+          <button class="quiz-option" data-idx="${i}" onclick="selectOption(${i}, this)">
+            <span class="option-indicator">${labels[i]}</span>
+            <span class="option-text">${opt.text}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  updateNavButtons();
+}
+
+// ===== SELECT / TOGGLE / NAV =====
+function selectOption(index, el) {
+  if (isMultiSelect) {
+    if (selectedOptions.has(index)) {
+      selectedOptions.delete(index);
+      el.classList.remove('multi-selected');
+    } else {
+      selectedOptions.add(index);
+      el.classList.add('multi-selected');
+    }
+  } else {
+    document.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    selectedOptions.clear();
+    selectedOptions.add(index);
+    el.classList.add('selected');
+  }
+  updateNavButtons();
+}
+
+function toggleMultiSelect() {
+  isMultiSelect = !isMultiSelect;
+  const btn = document.getElementById('btn-multi-toggle');
+  if (isMultiSelect) {
+    btn.classList.add('active');
+    btn.textContent = '🔀 返回单选';
+    if (selectedOptions.size === 1) {
+      const idx = [...selectedOptions][0];
+      const el = document.querySelector(`.quiz-option[data-idx="${idx}"]`);
+      if (el) { el.classList.remove('selected'); el.classList.add('multi-selected'); }
+    }
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🔀 我要多选';
+    document.querySelectorAll('.quiz-option').forEach(o => {
+      o.classList.remove('multi-selected', 'selected');
+    });
+    selectedOptions.clear();
+  }
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  const btnNext = document.getElementById('btn-next');
+  const btnPrev = document.getElementById('btn-prev');
+  const counter = document.getElementById('quiz-counter');
+  const total = questionSet.length;
+  btnNext.disabled = selectedOptions.size === 0;
+  btnNext.textContent = currentQuestion === total - 1 ? '查看结果 ✨' : (isMultiSelect ? '下一题（多选）→' : '下一题 →');
+  btnPrev.style.visibility = currentQuestion === 0 ? 'hidden' : 'visible';
+  counter.textContent = `${currentQuestion + 1} / ${total}`;
+}
+
+function nextQuestion() {
+  if (selectedOptions.size === 0) return;
+  const seasons = [...selectedOptions].map(i => shuffledOptions[i].season);
+  const weight = 1.0 / seasons.length;
+  answers.push({ seasons, weight });
+
+  const total = questionSet.length;
+  if (currentQuestion < total - 1) {
+    currentQuestion++;
+    renderQuestion();
+    updateGrowthStage(currentQuestion);
+  } else {
+    updateGrowthStage(total - 1);
+    showResult();
+  }
+}
+
+function prevQuestion() {
+  if (currentQuestion === 0) return;
+  currentQuestion--;
+  answers.pop();
+  renderQuestion();
+  document.getElementById('quiz-progress-fill').style.width =
+    `${(currentQuestion / questionSet.length) * 100}%`;
+  updateGrowthStage(currentQuestion);
+}
+
+// ===== RESULT CALCULATION =====
+function calculateResult() {
+  const scores = { spring: 0, summer: 0, autumn: 0, winter: 0 };
+  let multiSelectCount = 0;
+  answers.forEach(a => {
+    a.seasons.forEach(s => { scores[s] += a.weight; });
+    if (a.seasons.length > 1) multiSelectCount++;
+  });
+
+  let topSeason = 'spring';
+  let topScore = 0;
+  for (const [season, score] of Object.entries(scores)) {
+    if (score > topScore) { topScore = score; topSeason = season; }
+  }
+
+  const tied = Object.entries(scores).filter(([s, v]) => v === topScore && s !== topSeason);
+  if (tied.length > 0) {
+    for (const a of answers) {
+      for (const s of a.seasons) {
+        if (s === topSeason || tied.some(([ts]) => ts === s)) { topSeason = s; break; }
+      }
+      if (topSeason !== 'spring' || tied.some(([ts]) => ts === 'spring')) break;
+    }
+  }
+
+  // Normalize scores
+  const totalScore = scores.spring + scores.summer + scores.autumn + scores.winter;
+  const scorePct = {};
+  for (const [s, v] of Object.entries(scores)) {
+    scorePct[s] = totalScore > 0 ? Math.round((v / totalScore) * 100) : 0;
+  }
+
+  // Pick specific term within season using dominance + secondary season
+  const terms = solarTerms[topSeason];
+  const seasons = ['spring', 'summer', 'autumn', 'winter'];
+  const sortedSeasons = seasons.filter(s => s !== topSeason).sort((a, b) => scores[b] - scores[a]);
+  const secondSeason = sortedSeasons[0];
+  const thirdSeason = sortedSeasons[1];
+  const topPct = scorePct[topSeason];
+  const secondPct = scorePct[secondSeason];
+  const thirdPct = scorePct[thirdSeason];
+
+  let termIndex;
+  const mappings = {
+    spring: () => {
+      if (secondSeason === 'winter') return 0;
+      if (topPct < 35) return 1;
+      if (topPct > 50 && secondPct < 18 && thirdPct < 15) return 2;
+      if (topPct >= 35 && topPct <= 50 && Math.abs(secondPct - thirdPct) < 10) return 3;
+      if (secondSeason === 'autumn') return 4;
+      if (secondSeason === 'summer') return 5;
+      return 1;
+    },
+    summer: () => {
+      if (secondSeason === 'spring') return 0;
+      if (topPct < 35) return 1;
+      if (topPct > 45 && secondSeason === 'autumn') return 2;
+      if (topPct > 55) return 3;
+      if (secondSeason === 'winter') return 4;
+      if (topPct > 45 && secondPct > 18) return 5;
+      return 1;
+    },
+    autumn: () => {
+      if (secondSeason === 'summer') return 0;
+      if (topPct < 35) return 1;
+      if (secondSeason === 'winter' && topPct > 40) return 2;
+      if (topPct >= 35 && topPct <= 48 && Math.abs(secondPct - thirdPct) < 12) return 3;
+      if (topPct > 50) return 4;
+      if (secondSeason === 'spring') return 5;
+      return 1;
+    },
+    winter: () => {
+      if (secondSeason === 'autumn') return 0;
+      if (topPct < 35) return 1;
+      if (secondSeason === 'spring') return 2;
+      if (topPct > 55 && secondPct < 18) return 3;
+      if (secondSeason === 'summer') return 4;
+      if (topPct > 45) return 5;
+      return 1;
+    }
+  };
+  termIndex = (mappings[topSeason] || (() => 0))();
+
+  let accuracy = 'high';
+  if (quizMode === 'simple') accuracy = 'medium';
+  if (multiSelectCount > answers.length * 0.3) accuracy = 'low';
+
+  return {
+    season: topSeason, scores, scorePct,
+    term: terms[termIndex], accuracy,
+    multiSelectCount, totalQuestions: answers.length
+  };
+}
+
+// ===== RESULT ILLUSTRATION (CSS plant replicating growth stage) =====
+function renderResultIllustration(season, termIndex) {
+  const container = document.getElementById('result-illustration');
+  // Map season + termIndex to growth stage (0-23)
+  const seasonStart = { spring: 0, summer: 6, autumn: 12, winter: 18 };
+  const stage = seasonStart[season] + termIndex;
+
+  // Build a mini version of the growth scene for the result
+  const stageInfo = getStageVisuals(stage, season, termIndex);
+  container.innerHTML = stageInfo;
+}
+
+function getStageVisuals(stage, season, termIndex) {
+  // Return inline SVG or CSS HTML for the specific growth stage
+  const stemColors = { spring: '#6b9b4f', summer: '#5a8a3e', autumn: '#8b7355', winter: '#8b7355' };
+  const leafColors = { spring: '#7bab5b', summer: '#5a8a3e', autumn: '#c9984a', winter: 'transparent' };
+  const stemColor = stemColors[season];
+  const leafColor = leafColors[season];
+
+  // Generate a simple SVG illustration
+  const svgParts = [];
+  const cx = 50, cy = 70; // base of plant
+
+  // Soil
+  svgParts.push(`<ellipse cx="50" cy="88" rx="30" ry="5" fill="#c4a86c" opacity="0.6"/>`);
+  svgParts.push(`<rect x="20" y="88" width="60" height="10" fill="#8b6914" rx="2"/>`);
+
+  if (stage <= 5) {
+    // Spring: seed → sprout
+    const prog = stage / 5;
+    const stemH = prog * 30;
+    if (stage <= 1) {
+      svgParts.push(`<ellipse cx="50" cy="84" rx="${6 - stage}" ry="${4 - stage * 1.5}" fill="#a07828"/>`);
+    }
+    if (stage >= 2) {
+      svgParts.push(`<line x1="50" y1="${84 - stemH}" x2="50" y2="84" stroke="${stemColor}" stroke-width="2" stroke-linecap="round"/>`);
+    }
+    if (stage >= 3) {
+      svgParts.push(`<ellipse cx="44" cy="${78 - stemH * 0.5}" rx="8" ry="4" fill="${leafColor}" transform="rotate(-30 44 ${78 - stemH * 0.5})"/>`);
+    }
+    if (stage >= 4) {
+      svgParts.push(`<ellipse cx="56" cy="${72 - stemH * 0.4}" rx="8" ry="4" fill="${leafColor}" transform="rotate(30 56 ${72 - stemH * 0.4})"/>`);
+    }
+    if (stage === 1) {
+      svgParts.push(`<circle cx="48" cy="80" r="2" fill="rgba(180,210,240,0.7)"/>`);
+    }
+  } else if (stage <= 11) {
+    // Summer: full plant → flower → fruit
+    const prog = (stage - 6) / 5;
+    svgParts.push(`<line x1="50" y1="40" x2="50" y2="84" stroke="${stemColor}" stroke-width="2.5" stroke-linecap="round"/>`);
+    // Leaves
+    svgParts.push(`<ellipse cx="42" cy="72" rx="10" ry="5" fill="${leafColor}" transform="rotate(-25 42 72)"/>`);
+    svgParts.push(`<ellipse cx="58" cy="64" rx="10" ry="5" fill="${leafColor}" transform="rotate(25 58 64)"/>`);
+    svgParts.push(`<ellipse cx="40" cy="56" rx="9" ry="4" fill="${leafColor}" transform="rotate(-30 40 56)"/>`);
+    svgParts.push(`<ellipse cx="60" cy="48" rx="9" ry="4" fill="${leafColor}" transform="rotate(30 60 48)"/>`);
+    // Flower
+    if (stage >= 8 && stage <= 10) {
+      const flowerScale = stage === 10 ? 1 : 0.6;
+      svgParts.push(`<circle cx="50" cy="38" r="${6 * flowerScale}" fill="#f0a0b0" opacity="0.9"/>`);
+      svgParts.push(`<circle cx="50" cy="38" r="${2.5 * flowerScale}" fill="#f5d34a"/>`);
+    }
+    // Fruit
+    if (stage >= 11) {
+      svgParts.push(`<circle cx="52" cy="42" r="5" fill="#d4735e"/>`);
+    }
+  } else if (stage <= 17) {
+    // Autumn: yellowing, fruit, leaves falling
+    const prog = (stage - 12) / 5;
+    const leafCol = prog > 0.4 ? '#c9984a' : leafColor;
+    svgParts.push(`<line x1="50" y1="42" x2="50" y2="84" stroke="${prog > 0.6 ? '#8b7355' : stemColor}" stroke-width="2.5" stroke-linecap="round"/>`);
+    if (stage < 15) {
+      svgParts.push(`<ellipse cx="42" cy="70" rx="9" ry="4" fill="${leafCol}" transform="rotate(-25 42 70)" opacity="${stage > 13 ? 0.6 : 1}"/>`);
+      svgParts.push(`<ellipse cx="58" cy="62" rx="9" ry="4" fill="${leafCol}" transform="rotate(25 58 62)" opacity="${stage > 14 ? 0.4 : 1}"/>`);
+    }
+    if (stage < 16) {
+      svgParts.push(`<ellipse cx="40" cy="54" rx="8" ry="3" fill="${leafCol}" transform="rotate(-30 40 54)" opacity="${stage > 14 ? 0.3 : 1}"/>`);
+    }
+    // Fruit
+    if (stage <= 16) {
+      svgParts.push(`<circle cx="52" cy="44" r="${stage === 16 ? 6 : 5}" fill="#d4735e" opacity="${stage >= 17 ? 0.3 : 0.9}"/>`);
+    }
+    // Dew at 白露 (stage 14)
+    if (stage === 14) {
+      svgParts.push(`<circle cx="44" cy="68" r="2.5" fill="rgba(180,210,240,0.7)"/>`);
+    }
+    // Falling leaves
+    if (stage >= 16) {
+      svgParts.push(`<ellipse cx="35" cy="58" rx="7" ry="3" fill="#c9984a" transform="rotate(45 35 58)" opacity="0.6"/>`);
+    }
+  } else {
+    // Winter: bare branches, snow
+    const prog = (stage - 18) / 5;
+    svgParts.push(`<line x1="50" y1="44" x2="50" y2="84" stroke="#8b7355" stroke-width="2.5" stroke-linecap="round"/>`);
+    // Bare twigs
+    svgParts.push(`<line x1="50" y1="56" x2="40" y2="52" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round"/>`);
+    svgParts.push(`<line x1="50" y1="50" x2="58" y2="46" stroke="#8b7355" stroke-width="1.5" stroke-linecap="round"/>`);
+    // Snow on ground
+    const snowH = prog * 25;
+    if (snowH > 0) {
+      svgParts.push(`<rect x="22" y="${88 - snowH}" width="56" height="${snowH}" fill="#e8eef4" rx="3" opacity="0.8"/>`);
+    }
+    // Snow on branches
+    if (prog > 0.3) {
+      svgParts.push(`<line x1="38" y1="50" x2="42" y2="50" stroke="#e8eef4" stroke-width="3" stroke-linecap="round" opacity="${Math.min(prog, 0.8)}"/>`);
+    }
+    // Seed underground at 大寒 (stage 23)
+    if (stage === 23) {
+      svgParts.push(`<ellipse cx="50" cy="86" rx="4" ry="3" fill="#a07828" opacity="0.6"/>`);
+    }
+  }
+
+  return `<svg viewBox="0 0 100 100" width="100" height="100">${svgParts.join('')}</svg>`;
+}
+
+// ===== SHOW RESULT =====
+function showResult() {
+  const result = calculateResult();
+  const t = result.term;
+
+  document.getElementById('quiz-progress-fill').style.width = '100%';
+
+  // Accuracy badge
+  const accEl = document.getElementById('result-accuracy');
+  const accLabels = {
+    high: { text: '🎯 结果较准确', bg: '#e8f0e3', color: '#5b8c5a' },
+    medium: { text: '📋 结果供参考', bg: '#fef9f0', color: '#b8860b' },
+    low: { text: '💬 仅供参考娱乐', bg: '#fdf5f5', color: '#b5343a' }
+  };
+  const acc = accLabels[result.accuracy];
+  accEl.textContent = acc.text; accEl.style.background = acc.bg; accEl.style.color = acc.color;
+
+  // Badge
+  document.getElementById('result-badge').textContent = t.badge;
+  document.getElementById('result-badge').style.background = t.badgeBg;
+  document.getElementById('result-badge').style.color = t.badgeColor;
+
+  // Name
+  document.getElementById('result-name').textContent = t.name;
+  document.getElementById('result-name').style.color = t.color;
+  document.getElementById('result-sub').textContent = t.sub;
+
+  // Traits
+  document.getElementById('result-traits').innerHTML = t.traits.map(tr =>
+    `<span class="result-trait" style="background:${t.traitBg};color:${t.traitColor}">${tr}</span>`
+  ).join('');
+
+  // Description + poem
+  document.getElementById('result-desc').textContent = t.desc;
+  document.getElementById('result-poem').textContent = t.poem;
+
+  // Illustration
+  const seasonStart = { spring: 0, summer: 6, autumn: 12, winter: 18 };
+  const allTerms = [...solarTerms.spring, ...solarTerms.summer, ...solarTerms.autumn, ...solarTerms.winter];
+  const termGlobalIndex = allTerms.findIndex(term => term.name === t.name);
+  const termIdx = termGlobalIndex - seasonStart[result.season];
+  document.getElementById('result-illustration').innerHTML = getStageVisuals(termGlobalIndex, result.season, termIdx);
+
+  // Distribution
+  const seasonNames = { spring: '🌸 春', summer: '🔥 夏', autumn: '🍁 秋', winter: '❄️ 冬' };
+  document.getElementById('result-distribution').innerHTML = `
+    <div class="result-distribution-title">你的四季气质分布</div>
+    ${['spring', 'summer', 'autumn', 'winter'].map(s => `
+      <div class="dist-bar-wrap">
+        <span class="dist-bar-label">${seasonNames[s]}</span>
+        <div class="dist-bar-track">
+          <div class="dist-bar-fill ${s}" style="width: ${result.scorePct[s]}%"></div>
+        </div>
+        <span class="dist-bar-pct">${result.scorePct[s]}%</span>
+      </div>
+    `).join('')}
+  `;
+
+  window._quizResult = result;
+  showScreen('result');
+}
+
+// ===== SHARE =====
+function shareResult() {
+  const r = window._quizResult;
+  if (!r) return;
+  const t = r.term;
+  const modeLabel = quizMode === 'simple' ? '精简版' : '详细版';
+  const shareText = `我在「节气性格测试」${modeLabel}中测出最像【${t.name}】！\n\n${t.desc.substring(0, 80)}……\n\n快来测测你最像哪个节气吧！`;
+
+  if (navigator.share) {
+    navigator.share({ title: '测测你最像24节气中的哪个节气', text: shareText }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(shareText).then(() => {
+      showToast('✅ 结果已复制，粘贴分享给朋友吧！');
+    }).catch(() => { showToast('📋 分享内容已准备好，请手动复制～'); });
+  }
+}
+
+function retakeQuiz() {
+  currentQuestion = 0;
+  answers = [];
+  selectedOptions = new Set();
+  isMultiSelect = false;
+  quizMode = null;
+  questionSet = [];
+  showScreen('home');
+  // Reset seed animation
+  document.getElementById('home-seed').classList.remove('dropping');
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', (e) => {
+  const quizScreen = document.getElementById('screen-quiz');
+  if (!quizScreen.classList.contains('active')) return;
+  if (e.key >= '1' && e.key <= '4') {
+    const idx = parseInt(e.key) - 1;
+    const opt = document.querySelector(`.quiz-option[data-idx="${idx}"]`);
+    if (opt) selectOption(idx, opt);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    nextQuestion();
+  } else if (e.key === 'm' || e.key === 'M') {
+    toggleMultiSelect();
+  }
+});
+</script>
+
+</body>
+</html>
